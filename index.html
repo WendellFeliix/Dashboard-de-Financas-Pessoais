@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Finanças Pessoais | Razão</title>
+<meta name="description" content="Dashboard demonstrativo para acompanhar entradas, saídas e transações financeiras pessoais.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Navegação lateral (vira barra inferior no mobile) -->
+  <nav class="nav" aria-label="Navegação principal">
+    <div class="nav-brand">Razão</div>
+    <ul class="nav-list">
+      <li><button class="nav-item is-active" data-nav="dashboard" aria-current="page"><span class="nav-dot" aria-hidden="true"></span>Painel</button></li>
+      <li><button class="nav-item" data-nav="transacoes"><span class="nav-dot" aria-hidden="true"></span>Transações</button></li>
+      <li><button class="nav-item" data-nav="metas"><span class="nav-dot" aria-hidden="true"></span>Metas</button></li>
+      <li><button class="nav-item" data-nav="ajustes"><span class="nav-dot" aria-hidden="true"></span>Ajustes</button></li>
+    </ul>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro" aria-pressed="false">
+      <span class="theme-toggle-track"><span class="theme-toggle-thumb"></span></span>
+    </button>
+  </nav>
+
+  <!-- Conteúdo principal -->
+  <main class="main">
+
+    <header class="top">
+      <div>
+        <p class="top-eyebrow" id="topDate"></p>
+        <h1 class="top-greeting">Boa tarde, Camila</h1>
+      </div>
+      <button class="btn btn-primary" id="openModalBtn" type="button">Nova transação</button>
+    </header>
+
+    <!-- Saldo em destaque -->
+    <section class="hero">
+      <div class="hero-balance">
+        <span class="hero-label">Saldo disponível</span>
+        <span class="hero-number" id="balanceNumber" aria-live="polite">R$ 0,00</span>
+        <div class="hero-deltas">
+          <span class="pill pill-income" id="incomeTotal">Entradas: R$ 0,00</span>
+          <span class="pill pill-expense" id="expenseTotal">Saídas: R$ 0,00</span>
+        </div>
+      </div>
+      <div class="hero-chart">
+        <span class="hero-chart-label">Movimentação — últimos 7 dias</span>
+        <canvas id="weekChart" width="480" height="160" role="img" aria-label="Gráfico ilustrativo de movimentação financeira nos últimos sete dias">Seu navegador não oferece suporte ao gráfico.</canvas>
+      </div>
+    </section>
+
+    <!-- Gastos por categoria: os cartões são gerados a partir das transações. -->
+    <section class="categories" id="categories" aria-label="Gastos por categoria"></section>
+
+    <!-- Extrato / ledger -->
+    <section class="ledger">
+      <div class="ledger-head">
+        <h2>Extrato recente</h2>
+        <div class="ledger-filters">
+          <button class="chip is-active" type="button" data-filter="todas" aria-pressed="true">Todas</button>
+          <button class="chip" type="button" data-filter="entrada" aria-pressed="false">Entradas</button>
+          <button class="chip" type="button" data-filter="saida" aria-pressed="false">Saídas</button>
+        </div>
+      </div>
+
+      <div class="ledger-table" role="table" aria-label="Lista de transações" aria-live="polite">
+        <div class="ledger-row ledger-row-heading" role="row">
+          <span role="columnheader">Descrição</span>
+          <span role="columnheader">Categoria</span>
+          <span role="columnheader">Data</span>
+          <span role="columnheader" class="align-right">Valor</span>
+        </div>
+
+        <div id="ledgerBody"><!-- linhas inseridas via JS --></div>
+      </div>
+
+      <p class="ledger-empty" id="ledgerEmpty" hidden>Nenhuma transação encontrada para este filtro.</p>
+    </section>
+
+  </main>
+</div>
+
+<!-- Modal nova transação -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h2 id="modalTitle">Nova transação</h2>
+      <button class="modal-close" id="closeModalBtn" type="button" aria-label="Fechar">&times;</button>
+    </div>
+
+    <form id="transactionForm" novalidate>
+      <div class="field-row">
+        <button type="button" class="type-toggle is-active" data-type="entrada" aria-pressed="true">Entrada</button>
+        <button type="button" class="type-toggle" data-type="saida" aria-pressed="false">Saída</button>
+      </div>
+
+      <label class="field">
+        <span>Descrição</span>
+        <input type="text" id="descInput" name="description" maxlength="100" autocomplete="off" placeholder="Ex: Mercado, salário, freela..." aria-describedby="descError" required>
+        <span class="field-error" id="descError"></span>
+      </label>
+
+      <label class="field">
+        <span>Categoria</span>
+        <select id="catInput" name="category" required>
+          <option>Moradia</option>
+          <option>Alimentação</option>
+          <option>Transporte</option>
+          <option>Lazer</option>
+          <option>Salário</option>
+          <option>Outros</option>
+        </select>
+      </label>
+
+      <label class="field">
+        <span>Valor (R$)</span>
+        <input type="number" id="valueInput" name="value" placeholder="0,00" min="0.01" step="0.01" inputmode="decimal" aria-describedby="valueError" required>
+        <span class="field-error" id="valueError"></span>
+      </label>
+
+      <button type="submit" class="btn btn-primary btn-block">Adicionar ao extrato</button>
+    </form>
+  </div>
+</div>
+
+<script src="js/script.js"></script>
+</body>
+</html>
